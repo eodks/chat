@@ -1,45 +1,56 @@
-async function sendMessage() {
-    const inputField = document.getElementById('userInput');
-    const text = inputField.value.trim();
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Chat</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f4f4; display: flex; justify-content: center; padding: 20px; }
+        #chat { width: 400px; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        #log { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+        .user { color: blue; text-align: left; margin: 5px 0; }
+        .ai { color: green; text-align: right; margin: 5px 0; }
+        .err { color: red; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div id="chat">
+        <div id="log"></div>
+        <input type="text" id="msg" placeholder="پیام..." style="width: 70%">
+        <button onclick="send()">ارسال</button>
+    </div>
 
-    if (!text) return;
+    <script>
+        const KEY = 'کلید_جدید_خود_را_اینجا_بگذارید';
+        
+        async function send() {
+            const btn = document.querySelector('button');
+            const input = document.getElementById('msg');
+            const log = document.getElementById('log');
+            const txt = input.value;
+            if(!txt) return;
 
-    addMessage(text, 'user');
-    inputField.value = '';
+            log.innerHTML += `<div class="user">شما: ${txt}</div>`;
+            input.value = '';
+            btn.disabled = true;
 
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json'
-                // نکته: در مرورگر نباید API Key را در Header بگذارید (CORS Error)
-                // همان متد URL که استفاده کردیم برای مرورگر بهتر است
-            },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: text }] }]
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.error) {
-            // نمایش خطای مستقیم از سمت گوگل
-            addMessage("خطای گوگل: " + data.error.message, 'ai');
-            return;
+            try {
+                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AIzaSyBAUXzPyIhaWmtPTfYeMuwqHuzE4HUdhe8}`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({contents: [{parts: [{text: txt}]}]})
+                });
+                const data = await res.json();
+                if(data.error) throw new Error(data.error.message);
+                const aiTxt = data.candidates[0].content.parts[0].text;
+                log.innerHTML += `<div class="ai">هوش مصنوعی: ${aiTxt}</div>`;
+            } catch (e) {
+                log.innerHTML += `<div class="err">خطا: ${e.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                log.scrollTop = log.scrollHeight;
+            }
         }
-
-        if (data.candidates && data.candidates[0].content) {
-            const aiResponse = data.candidates[0].content.parts[0].text;
-            addMessage(aiResponse, 'ai');
-        } else {
-            addMessage("پاسخی دریافت نشد. احتمالاً کلید API شما محدود شده است.", 'ai');
-        }
-
-    } catch (error) {
-        // این بخش زمانی اجرا می‌شود که فیلترشکن شما وصل نباشد یا اینترنت مشکل داشته باشد
-        addMessage("خطای شبکه: فیلترشکن را چک کنید یا کنسول را ببینید.", 'ai');
-        console.error("Error Detail:", error);
-    }
-}
-
+    </script>
+</body>
+</html>
 
