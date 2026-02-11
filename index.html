@@ -3,55 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>چت‌بات هوش مصنوعی</title>
+    <title>AI Chat 2026</title>
     <style>
-        body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        #chat-container { width: 400px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        #messages { height: 350px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: flex; flex-direction: column; }
-        .message { margin: 5px; padding: 10px; border-radius: 12px; max-width: 85%; word-wrap: break-word; line-height: 1.4; }
-        .user { background: #007bff; color: white; align-self: flex-end; }
-        .ai { background: #e9e9eb; color: #333; align-self: flex-start; }
-        .error { background: #fee2e2; color: #dc2626; align-self: center; font-size: 12px; }
-        .input-area { display: flex; gap: 5px; }
-        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
-        button { padding: 10px 15px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; }
-        button:hover { background: #059669; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #chat-box { width: 450px; height: 80vh; background: #1e293b; display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #334155; }
+        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
+        .msg { padding: 12px 16px; border-radius: 15px; max-width: 80%; line-height: 1.5; font-size: 14px; position: relative; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .user { background: #3b82f6; align-self: flex-end; border-bottom-right-radius: 2px; }
+        .ai { background: #334155; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #475569; }
+        .status { font-size: 12px; color: #94a3b8; text-align: center; margin: 5px; }
+        .input-area { background: #1e293b; padding: 15px; border-top: 1px solid #334155; display: flex; gap: 10px; }
+        input { flex: 1; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; }
+        input:focus { border-color: #3b82f6; }
+        button { background: #10b981; border: none; padding: 0 20px; border-radius: 10px; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { background: #059669; transform: scale(1.05); }
+        button:disabled { background: #64748b; cursor: not-allowed; }
     </style>
 </head>
 <body>
 
-<div id="chat-container">
+<div id="chat-box">
+    <div style="padding: 15px; text-align: center; background: #334155; font-weight: bold;">Gemini 3 Flash</div>
     <div id="messages"></div>
+    <div id="typing" class="status" style="display: none;">در حال تفکر...</div>
     <div class="input-area">
-        <input type="text" id="userInput" placeholder="سوالی بپرسید...">
-        <button onclick="sendMessage()">ارسال</button>
+        <input type="text" id="userInput" placeholder="چیزی بنویسید..." autocomplete="off">
+        <button id="sendBtn">ارسال</button>
     </div>
 </div>
 
 <script>
-    // API Key جدید شما که به درستی در کوتیشن قرار گرفته است
+    // استفاده از API KEY و مدل جدید از لیست شما
     const API_KEY = 'AIzaSyBAUXzPyIhaWmtPTfYeMuwqHuzE4HUdhe8';
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${API_KEY}`;
+    const MODEL = 'gemini-3-flash-preview'; // مدرن‌ترین مدل لیست شما
+    const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+
     const messagesDiv = document.getElementById('messages');
     const inputField = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const typingDiv = document.getElementById('typing');
 
-    function addMessage(text, type) {
-        const msgDiv = document.createElement('div');
-        msgDiv.className = `message ${type}`;
-        msgDiv.innerText = text;
-        messagesDiv.appendChild(msgDiv);
+    function addMessage(text, side) {
+        const div = document.createElement('div');
+        div.className = `msg ${side}`;
+        div.innerText = text;
+        messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    async function sendMessage() {
+    async function chat() {
         const text = inputField.value.trim();
         if (!text) return;
 
         addMessage(text, 'user');
         inputField.value = '';
+        inputField.disabled = true;
+        sendBtn.disabled = true;
+        typingDiv.style.display = 'block';
 
         try {
-            const response = await fetch(API_URL, {
+            const response = await fetch(URL, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -61,33 +73,31 @@
 
             const data = await response.json();
 
-            if (data.error) {
-                throw new Error(data.error.message);
-            }
+            if (data.error) throw new Error(data.error.message);
 
-            if (data.candidates && data.candidates[0].content) {
-                const aiResponse = data.candidates[0].content.parts[0].text;
-                addMessage(aiResponse, 'ai');
-            } else {
-                addMessage("پاسخی از هوش مصنوعی دریافت نشد.", 'error');
-            }
+            const aiText = data.candidates[0].content.parts[0].text;
+            addMessage(aiText, 'ai');
 
-        } catch (error) {
-            console.error("Error details:", error);
-            addMessage("خطا: " + error.message, 'error');
+        } catch (err) {
+            addMessage("خطا: " + err.message, 'ai');
+            console.error(err);
+        } finally {
+            inputField.disabled = false;
+            sendBtn.disabled = false;
+            typingDiv.style.display = 'none';
+            inputField.focus();
         }
     }
 
-    // ارسال با دکمه اینتر
-    inputField.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') sendMessage();
-    });
+    sendBtn.onclick = chat;
+    inputField.onkeypress = (e) => { if (e.key === 'Enter') chat(); };
+
+    addMessage("سلام! من Gemini 3 هستم. چطور می‌توانم کمکت کنم؟", 'ai');
 </script>
 
 </body>
 </html>
-</body>
-</html>
+
 
 
 
