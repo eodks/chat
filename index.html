@@ -1,102 +1,383 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Chat 2026</title>
+    <title>Pshop | رفیق جادویی تو</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        #chat-box { width: 450px; height: 80vh; background: #1e293b; display: flex; flex-direction: column; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border: 1px solid #334155; }
-        #messages { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-        .msg { padding: 12px 16px; border-radius: 15px; max-width: 80%; line-height: 1.5; font-size: 14px; position: relative; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .user { background: #3b82f6; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .ai { background: #334155; align-self: flex-start; border-bottom-left-radius: 2px; border: 1px solid #475569; }
-        .status { font-size: 12px; color: #94a3b8; text-align: center; margin: 5px; }
-        .input-area { background: #1e293b; padding: 15px; border-top: 1px solid #334155; display: flex; gap: 10px; }
-        input { flex: 1; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; outline: none; }
-        input:focus { border-color: #3b82f6; }
-        button { background: #10b981; border: none; padding: 0 20px; border-radius: 10px; color: white; cursor: pointer; font-weight: bold; transition: 0.2s; }
-        button:hover { background: #059669; transform: scale(1.05); }
-        button:disabled { background: #64748b; cursor: not-allowed; }
+        :root {
+            --glass: rgba(255, 255, 255, 0.7);
+            --accent: #2563eb;
+            --dark: #0f172a;
+            --border: rgba(255, 255, 255, 0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body {
+            background: radial-gradient(circle at top left, #c7e4ff 0, #baf3c0 35%, #ffd3a1 70%, #f5f5ff 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            color: var(--dark);
+            overflow-x: hidden;
+            padding-bottom: 120px;
+        }
+
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; height: 80px;
+            backdrop-filter: blur(20px); background: rgba(255, 255, 255, 0.3);
+            border-bottom: 1px solid var(--border); z-index: 2000;
+            display: flex; align-items: center; justify-content: space-between; padding: 0 5%;
+        }
+
+        .chat-container {
+            max-width: 800px; margin: 120px auto 20px; padding: 0 20px;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+
+        .bubble { max-width: 85%; padding: 20px 25px; border-radius: 30px; font-size: 15.5px; line-height: 2; animation: pop 0.5s ease; position: relative; }
+        .ai { background: white; align-self: flex-start; border-bottom-right-radius: 4px; box-shadow: 0 10px 35px rgba(0,0,0,0.05); border: 1px solid white; color: #1e293b; }
+        .user { background: var(--dark); color: white; align-self: flex-end; border-bottom-left-radius: 4px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+
+        .search-wrapper {
+            position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+            width: 95%; max-width: 650px; z-index: 2500;
+        }
+
+        .search-bar {
+            background: white; border-radius: 50px; padding: 10px;
+            display: flex; align-items: center; box-shadow: 0 25px 60px rgba(0,0,0,0.18);
+            border: 1px solid var(--border);
+        }
+
+        .search-input { flex: 1; border: none; outline: none; padding: 12px 20px; font-size: 16px; background: transparent; }
+        .send-btn { background: var(--dark); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .send-btn:hover { background: var(--accent); transform: scale(1.1) rotate(-15deg); }
+
+        .products-grid {
+            max-width: 1100px; margin: 40px auto; padding: 20px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px;
+        }
+
+        .product-card {
+            background: rgba(255,255,255,0.75); border-radius: 45px; padding: 30px;
+            border: 1px solid white; text-align: center; backdrop-filter: blur(20px); transition: 0.5s; animation: slideUp 0.8s ease;
+        }
+        
+        .product-image-box {
+            width: 100%; height: 250px; border-radius: 35px; overflow: hidden; margin-bottom: 25px;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.02);
+        }
+        .product-image-box img { width: 100%; height: 100%; object-fit: cover; transition: 0.6s; }
+        .product-card:hover img { transform: scale(1.1); }
+
+        .loader { display: none; text-align: center; color: var(--accent); font-weight: bold; margin-bottom: 25px; font-style: italic; }
+
+        @keyframes pop { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* --- New Styling Added --- */
+        .modal-overlay {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px); display:none; justify-content:center; align-items:center; z-index: 3000;
+        }
+        .magic-modal {
+            background: white; width: 90%; max-width: 500px; padding: 30px; border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1); position: relative;
+        }
+        .form-input { width: 100%; padding: 15px; margin: 10px 0; border-radius: 15px; border: 1px solid #eee; outline: none; }
+        .action-btn { background: var(--dark); color: white; border: none; padding: 15px; width: 100%; border-radius: 15px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+        .cart-horizontal { display: flex; align-items: center; gap: 15px; padding: 15px; border-bottom: 1px solid #eee; text-align: right; }
+        .cart-horizontal img { width: 70px; height: 70px; border-radius: 15px; object-fit: cover; }
     </style>
 </head>
 <body>
 
-<div id="chat-box">
-    <div style="padding: 15px; text-align: center; background: #334155; font-weight: bold;">Gemini 3 Flash</div>
-    <div id="messages"></div>
-    <div id="typing" class="status" style="display: none;">در حال تفکر...</div>
-    <div class="input-area">
-        <input type="text" id="userInput" placeholder="چیزی بنویسید..." autocomplete="off">
-        <button id="sendBtn">ارسال</button>
+    <header class="navbar">
+        <div style="font-weight: 900; font-size: 32px; color: var(--dark); letter-spacing: -1px;">Pshop</div>
+        <div style="display: flex; gap: 10px;">
+            <div id="user-account-btn" style="background: white; padding: 12px 25px; border-radius: 25px; font-size: 14px; border: 1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer;">
+                👤 حساب من
+            </div>
+            <div id="open-cart" style="background: white; padding: 12px 25px; border-radius: 25px; font-size: 14px; border: 1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.06); cursor: pointer;">
+                🛒 کلکسیون: <span id="cart-count" style="font-weight: 900; color: var(--accent);">0</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="main-flow">
+        <div class="chat-container" id="chat-box">
+            <div class="bubble ai">سلام به خوش‌سلیقه‌ترین رفیق دنیا! 😍 چقدر منتظر بودم بیای تا با هم یه ماجراجویی راه بندازیم. بگو ببینم، امروز کدوم رویا رو می‌خوایم به واقعیت تبدیل کنیم؟</div>
+        </div>
+        <div class="loader" id="ai-loader">در حال رویاپردازی برای حرف‌های قشنگت... ✨</div>
+        <div class="products-grid" id="p-grid"></div>
     </div>
-</div>
 
-<script>
-    // استفاده از API KEY و مدل جدید از لیست شما
-    const API_KEY = 'AIzaSyBAUXzPyIhaWmtPTfYeMuwqHuzE4HUdhe8';
-    const MODEL = 'gemini-3-flash-preview'; // مدرن‌ترین مدل لیست شما
-    const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+    <div class="search-wrapper">
+        <div class="search-bar">
+            <input type="text" id="user-input" class="search-input" placeholder="با من گپ بزن، من سراپا گوشم..." autocomplete="off" />
+            <button class="send-btn" id="send-msg">➤</button>
+        </div>
+    </div>
 
-    const messagesDiv = document.getElementById('messages');
-    const inputField = document.getElementById('userInput');
-    const sendBtn = document.getElementById('sendBtn');
-    const typingDiv = document.getElementById('typing');
+    <div class="modal-overlay" id="modal-container">
+        <div class="magic-modal" id="modal-body"></div>
+    </div>
 
-    function addMessage(text, side) {
-        const div = document.createElement('div');
-        div.className = `msg ${side}`;
-        div.innerText = text;
-        messagesDiv.appendChild(div);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }
+    <script>
+        const API_KEY = "AIzaSyCQYe5kTAS0rsSXHQ8aWfAYBImGMYbN0Og";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${API_KEY}`;
+        
+        let chatHistory = [];
+        let cart = [];
+        let addresses = [];
+        let userProfile = null;
 
-    async function chat() {
-        const text = inputField.value.trim();
-        if (!text) return;
+        async function talkToAI(msg) {
+            const systemPrompt = `تو رفیق صمیمی و "فروشنده جادویی" Pshop هستی. 
+            لحنت باید ۱۰۰٪ صمیمی، رویاپرداز، باکلاس و سرگرم‌کننده باشه. باید با کاربر "لاس" بزنی، ازش تعریف کنی و بهش حس خاص بودن بدی.
+            قوانین حیاتی:
+            1. اصلا سریع جواب نده! مکالمه رو طولانی کن. دونه دونه اطلاعات رو لابلای تعریف و تمجید بگیر.
+            2. کاربر رو سوال‌پیچ کن تا دوپامین چت بالا بره.
+            3. هرگز سوال تکراری نپرس.
+            4. فقط وقتی به اوج دوپامین و قطعیت رسیدی، ۳ پیشنهاد شاهکار با JSON بده.
+            5. فیلد img رو جوری پر کن که انگار داری به Nano Banana دستور میدی یک عکس فانتزی بسازه.
+            JSON Format: [{"name":"...","price":"...","img":"fantasy 3d render of [model] on a magical desk with neon lights, 8k, masterpiece","desc":"چرا این عشقِ زندگیته؟"}]`;
 
-        addMessage(text, 'user');
-        inputField.value = '';
-        inputField.disabled = true;
-        sendBtn.disabled = true;
-        typingDiv.style.display = 'block';
+            const contents = [
+                { role: "user", parts: [{ text: "Context: " + systemPrompt }] },
+                ...chatHistory,
+                { role: "user", parts: [{ text: msg }] }
+            ];
 
-        try {
-            const response = await fetch(URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: text }] }]
-                })
-            });
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ contents: contents })
+                });
 
-            const data = await response.json();
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error?.message);
 
-            if (data.error) throw new Error(data.error.message);
+                const aiMsg = data.candidates[0].content.parts[0].text;
+                
+                chatHistory.push({ role: "user", parts: [{ text: msg }] });
+                chatHistory.push({ role: "model", parts: [{ text: aiMsg }] });
 
-            const aiText = data.candidates[0].content.parts[0].text;
-            addMessage(aiText, 'ai');
+                if (chatHistory.length > 15) chatHistory.splice(0, 2);
 
-        } catch (err) {
-            addMessage("خطا: " + err.message, 'ai');
-            console.error(err);
-        } finally {
-            inputField.disabled = false;
-            sendBtn.disabled = false;
-            typingDiv.style.display = 'none';
-            inputField.focus();
+                return aiMsg;
+            } catch (err) {
+                console.error(err);
+                return "انگار یه لحظه محو تماشای سلیقت شدم، دوباره بهم بگو رفیق! []";
+            }
         }
-    }
 
-    sendBtn.onclick = chat;
-    inputField.onkeypress = (e) => { if (e.key === 'Enter') chat(); };
+        const sendBtn = document.getElementById('send-msg');
+        const input = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const loader = document.getElementById('ai-loader');
 
-    addMessage("سلام! من Gemini 3 هستم. چطور می‌توانم کمکت کنم؟", 'ai');
-</script>
+        sendBtn.onclick = async () => {
+            const val = input.value.trim();
+            if(!val) return;
 
+            addBubble(val, 'user');
+            input.value = '';
+            loader.style.display = 'block';
+
+            const response = await talkToAI(val);
+            loader.style.display = 'none';
+
+            const jsonMatch = response.match(/\[\s*\{.*\}\s*\]/s);
+            const jsonStr = jsonMatch ? jsonMatch[0] : "[]";
+            const cleanText = response.replace(jsonStr, "").replace(/```json|```/g, "").trim();
+
+            typeEffect(cleanText, 'ai');
+
+            try {
+                const prods = JSON.parse(jsonStr);
+                if(prods.length > 0) renderProducts(prods);
+            } catch(e) {}
+        };
+
+        function addBubble(text, side) {
+            const b = document.createElement('div');
+            b.className = `bubble ${side}`;
+            b.innerHTML = text.replace(/\n/g, '<br>');
+            chatBox.appendChild(b);
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function typeEffect(text, side) {
+            const b = document.createElement('div');
+            b.className = `bubble ${side}`;
+            chatBox.appendChild(b);
+            let i = 0;
+            const timer = setInterval(() => {
+                if (i < text.length) {
+                    b.innerHTML += text.charAt(i) === '\n' ? '<br>' : text.charAt(i);
+                    i++;
+                    window.scrollTo(0, document.body.scrollHeight);
+                } else {
+                    clearInterval(timer);
+                }
+            }, 18);
+        }
+
+        function renderProducts(items) {
+            const grid = document.getElementById('p-grid');
+            grid.innerHTML = '';
+            items.forEach(i => {
+                const imgUrl = `https://loremflickr.com/g/800/600/${encodeURIComponent(i.img.split(' ')[0])},fantasy/all`;
+                
+                grid.innerHTML += `
+                    <div class="product-card">
+                        <div class="product-image-box">
+                            <img src="${imgUrl}" onerror="this.src='https://picsum.photos/seed/${i.name}/800/600'">
+                        </div>
+                        <h3 style="margin-bottom:15px; font-size: 22px; font-weight: 900;">${i.name}</h3>
+                        <p style="font-size:14px; color:#444; line-height:1.8; text-align:justify; padding: 0 10px;">${i.desc}</p>
+                        <p style="color:var(--accent); font-weight:900; font-size:26px; margin-top:25px">${i.price}</p>
+                        <button class="buy-btn" style="background:var(--dark); color:white; border:none; padding:20px; border-radius:30px; width:100%; cursor:pointer; margin-top:25px; font-weight:bold; font-size: 16px; transition: 0.3s;" onclick="addToCart('${i.name}', '${i.price}', '${imgUrl}', '${i.desc}')">عاشق این شاهکار فانتزی شدم 😍</button>
+                    </div>
+                `;
+            });
+            setTimeout(() => { window.scrollTo({ top: grid.offsetTop - 50, behavior: 'smooth' }); }, 500);
+        }
+
+        input.addEventListener("keypress", (e) => { if(e.key === "Enter") sendBtn.click(); });
+
+        // --- New Logic for Account, Address and Cart ---
+
+        const modalCont = document.getElementById('modal-container');
+        const modalBody = document.getElementById('modal-body');
+
+        function addToCart(name, price, img, desc) {
+            cart.push({name, price, img, desc});
+            document.getElementById('cart-count').innerText = cart.length;
+            alert('به کلکسیونت اضافه شد رفیق! ✨');
+        }
+
+        document.getElementById('user-account-btn').onclick = () => {
+            modalCont.style.display = 'flex';
+            if(!userProfile) showLoginStep(); else showAddressList();
+        };
+
+        function showLoginStep() {
+            modalBody.innerHTML = `
+                <h2>ورود جادویی 🌌</h2>
+                <input type="email" id="email-in" class="form-input" placeholder="جیمیلت رو وارد کن">
+                <button class="action-btn" onclick="showVerifyStep()">تایید جیمیل</button>
+            `;
+        }
+
+        function showVerifyStep() {
+            modalBody.innerHTML = `
+                <h2>کد تایید 🗝️</h2>
+                <p style="font-size:12px; color:gray">یک کد نمادین برای شما ارسال شد...</p>
+                <input type="text" class="form-input" placeholder="کد ۴ رقمی">
+                <button class="action-btn" onclick="showNameStep()">تایید کد</button>
+            `;
+        }
+
+        function showNameStep() {
+            modalBody.innerHTML = `
+                <h2>مشخصات فردی 👤</h2>
+                <input type="text" id="fn-in" class="form-input" placeholder="نام">
+                <input type="text" id="ln-in" class="form-input" placeholder="نام خانوادگی">
+                <input type="password" id="pw-in" class="form-input" placeholder="رمز عبور">
+                <input type="password" id="pwc-in" class="form-input" placeholder="تکرار رمز عبور">
+                <button class="action-btn" onclick="finishRegister()">ثبت‌نام نهایی</button>
+            `;
+        }
+
+        function finishRegister() {
+            userProfile = { name: document.getElementById('fn-in').value };
+            showAddressList();
+        }
+
+        function showAddressList() {
+            let addrHtml = addresses.map(a => `<div style="padding:10px; border:1px solid #eee; border-radius:10px; margin-bottom:10px;"><b>${a.title}</b>: ${a.address}</div>`).join('');
+            modalBody.innerHTML = `
+                <h2>آدرس‌های من 📍</h2>
+                <div style="margin-bottom:15px">${addrHtml || 'هنوز آدرسی نداری رفیق!'}</div>
+                <button class="action-btn" onclick="showNewAddressForm()">+ افزودن آدرس جدید</button>
+                <button class="action-btn" style="background:#ccc" onclick="modalCont.style.display='none'">بستن</button>
+            `;
+        }
+
+        function showNewAddressForm() {
+            modalBody.innerHTML = `
+                <h2>آدرس جدید 🏠</h2>
+                <input type="text" id="ad-title" class="form-input" placeholder="نام آدرس (مثلا خانه)">
+                <input type="text" id="ad-text" class="form-input" placeholder="آدرس">
+                <input type="text" id="ad-unit" class="form-input" placeholder="پلاک و واحد">
+                <input type="text" id="ad-zip" class="form-input" placeholder="کد پستی">
+                <button class="action-btn" onclick="saveAddress()">ذخیره آدرس</button>
+            `;
+        }
+
+        function saveAddress() {
+            addresses.push({ title: document.getElementById('ad-title').value, address: document.getElementById('ad-text').value });
+            showAddressList();
+        }
+
+        document.getElementById('open-cart').onclick = () => {
+            modalCont.style.display = 'flex';
+            if(cart.length === 0) {
+                modalBody.innerHTML = `<h2>🏜️ کلکسیونت رو گم کردی؟ بیا دوباره بسازیمش!</h2><button class="action-btn" onclick="modalCont.style.display='none'">بزن بریم</button>`;
+            } else {
+                let items = cart.map(i => `
+                    <div class="cart-horizontal">
+                        <img src="${i.img}">
+                        <div style="flex:1"><b>${i.name}</b><br><small>${i.price}</small></div>
+                    </div>
+                `).join('');
+                modalBody.innerHTML = `
+                    <h2>کلکسیون من ✨</h2>
+                    <div style="max-height:300px; overflow-y:auto">${items}</div>
+                    <button class="action-btn" onclick="proceedToAddress()">ادامه خرید</button>
+                `;
+            }
+        };
+
+        function proceedToAddress() {
+            if(!userProfile) { alert('اول باید وارد حساب کاربری بشی!'); showLoginStep(); return; }
+            if(addresses.length === 0) { alert('لطفا یک آدرس اضافه کن!'); showNewAddressForm(); return; }
+            
+            let opts = addresses.map((a, i) => `<div onclick="finalStep()" style="cursor:pointer; padding:10px; border:1px solid #eee; border-radius:10px; margin-top:10px;">ارسال به: ${a.title}</div>`).join('');
+            modalBody.innerHTML = `<h2>انتخاب آدرس 🚚</h2>${opts}`;
+        }
+
+        function finalStep() {
+            modalBody.innerHTML = `
+                <div style="text-align:center; padding:20px;">
+                    <h2>پرداخت و ثبت نهایی 💳</h2>
+                    <p style="margin-top:15px">آماده‌ای برای دریافت جادو؟</p>
+                    <button class="action-btn" style="background:green" onclick="showFinish()">ثبت سفارش</button>
+                </div>
+            `;
+        }
+
+        function showFinish() {
+            modalBody.innerHTML = `
+                <div style="text-align:center; padding:20px;">
+                    <h1 style="font-size:50px;">🎉</h1>
+                    <h2>سفارش با موفقیت ثبت شد</h2>
+                    <p style="margin-top:20px; color:#444">پایان نمایش ساخته شده توسط پوریا و Gemini Pro</p>
+                    <button class="action-btn" onclick="location.reload()">شروع دوباره</button>
+                </div>
+            `;
+        }
+
+        window.onclick = (e) => { if(e.target == modalCont) modalCont.style.display = 'none'; };
+    </script>
 </body>
 </html>
+
 
 
 
