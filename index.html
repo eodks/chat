@@ -2,55 +2,92 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>AI Chat</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت‌بات هوش مصنوعی</title>
     <style>
-        body { font-family: sans-serif; background: #f4f4f4; display: flex; justify-content: center; padding: 20px; }
-        #chat { width: 400px; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
-        #log { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
-        .user { color: blue; text-align: left; margin: 5px 0; }
-        .ai { color: green; text-align: right; margin: 5px 0; }
-        .err { color: red; font-size: 12px; }
+        body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #chat-container { width: 400px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        #messages { height: 350px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: flex; flex-direction: column; }
+        .message { margin: 5px; padding: 10px; border-radius: 12px; max-width: 85%; word-wrap: break-word; line-height: 1.4; }
+        .user { background: #007bff; color: white; align-self: flex-end; }
+        .ai { background: #e9e9eb; color: #333; align-self: flex-start; }
+        .error { background: #fee2e2; color: #dc2626; align-self: center; font-size: 12px; }
+        .input-area { display: flex; gap: 5px; }
+        input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; outline: none; }
+        button { padding: 10px 15px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; }
+        button:hover { background: #059669; }
     </style>
 </head>
 <body>
-    <div id="chat">
-        <div id="log"></div>
-        <input type="text" id="msg" placeholder="پیام..." style="width: 70%">
-        <button onclick="send()">ارسال</button>
+
+<div id="chat-container">
+    <div id="messages"></div>
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="سوالی بپرسید...">
+        <button onclick="sendMessage()">ارسال</button>
     </div>
+</div>
 
-    <script>
-        const KEY = 'کلید_جدید_خود_را_اینجا_بگذارید';
-        
-        async function send() {
-            const btn = document.querySelector('button');
-            const input = document.getElementById('msg');
-            const log = document.getElementById('log');
-            const txt = input.value;
-            if(!txt) return;
+<script>
+    // API Key جدید شما که به درستی در کوتیشن قرار گرفته است
+    const API_KEY = 'AIzaSyBAUXzPyIhaWmtPTfYeMuwqHuzE4HUdhe8';
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-            log.innerHTML += `<div class="user">شما: ${txt}</div>`;
-            input.value = '';
-            btn.disabled = true;
+    const messagesDiv = document.getElementById('messages');
+    const inputField = document.getElementById('userInput');
 
-            try {
-                const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${AIzaSyBAUXzPyIhaWmtPTfYeMuwqHuzE4HUdhe8}`, {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({contents: [{parts: [{text: txt}]}]})
-                });
-                const data = await res.json();
-                if(data.error) throw new Error(data.error.message);
-                const aiTxt = data.candidates[0].content.parts[0].text;
-                log.innerHTML += `<div class="ai">هوش مصنوعی: ${aiTxt}</div>`;
-            } catch (e) {
-                log.innerHTML += `<div class="err">خطا: ${e.message}</div>`;
-            } finally {
-                btn.disabled = false;
-                log.scrollTop = log.scrollHeight;
+    function addMessage(text, type) {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${type}`;
+        msgDiv.innerText = text;
+        messagesDiv.appendChild(msgDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    async function sendMessage() {
+        const text = inputField.value.trim();
+        if (!text) return;
+
+        addMessage(text, 'user');
+        inputField.value = '';
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: text }] }]
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.error) {
+                throw new Error(data.error.message);
             }
+
+            if (data.candidates && data.candidates[0].content) {
+                const aiResponse = data.candidates[0].content.parts[0].text;
+                addMessage(aiResponse, 'ai');
+            } else {
+                addMessage("پاسخی از هوش مصنوعی دریافت نشد.", 'error');
+            }
+
+        } catch (error) {
+            console.error("Error details:", error);
+            addMessage("خطا: " + error.message, 'error');
         }
-    </script>
+    }
+
+    // ارسال با دکمه اینتر
+    inputField.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') sendMessage();
+    });
+</script>
+
 </body>
 </html>
+</body>
+</html>
+
 
