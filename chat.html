@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>چت با هوش مصنوعی</title>
+    <style>
+        body { font-family: Tahoma, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        #chat-container { width: 400px; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        #messages { height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 10px; display: flex; flex-direction: column; }
+        .message { margin: 5px; padding: 8px 12px; border-radius: 15px; max-width: 80%; }
+        .user { background: #007bff; color: white; align-self: flex-end; }
+        .ai { background: #e9e9eb; color: #333; align-self: flex-start; }
+        input { width: 75%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div id="chat-container">
+    <h3>گفتگو با Gemini</h3>
+    <div id="messages"></div>
+    <div style="display: flex; gap: 5px;">
+        <input type="text" id="userInput" placeholder="چیزی بپرس...">
+        <button onclick="sendMessage()">ارسال</button>
+    </div>
+</div>
+
+<script>
+    const API_KEY = 'AIzaSyArN4YeOuGDJqIRVjMM5K6OiQWCT34T2Ck'; // کلید شما اینجا قرار دارد
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+    async function sendMessage() {
+        const inputField = document.getElementById('userInput');
+        const messageContainer = document.getElementById('messages');
+        const text = inputField.value.trim();
+
+        if (!text) return;
+
+        // نمایش پیام کاربر
+        addMessage(text, 'user');
+        inputField.value = '';
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: text }] }]
+                })
+            });
+
+            const data = await response.json();
+            const aiResponse = data.candidates[0].content.parts[0].text;
+            
+            // نمایش پاسخ هوش مصنوعی
+            addMessage(aiResponse, 'ai');
+        } catch (error) {
+            addMessage("خطا در برقراری ارتباط با سرور.", 'ai');
+            console.error(error);
+        }
+    }
+
+    function addMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message', sender);
+        msgDiv.innerText = text;
+        document.getElementById('messages').appendChild(msgDiv);
+        document.getElementById('messages').scrollTop = document.getElementById('messages').scrollHeight;
+    }
+</script>
+
+</body>
+</html>
